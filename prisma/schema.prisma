@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid()) @map("_id")
+  email         String    @unique
+  password      String
+  displayName   String
+  avatarUrl     String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  conversations ConversationParticipant[]
+  messages      Message[]
+  presence      Presence?
+  callsSent     Call[]    @relation("CallsSent")
+  callsReceived Call[]    @relation("CallsReceived")
+}
+
+model Conversation {
+  id        String   @id @default(cuid()) @map("_id")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  participants ConversationParticipant[]
+  messages     Message[]
+}
+
+model ConversationParticipant {
+  id             String   @id @default(cuid()) @map("_id")
+  conversationId String
+  userId         String
+  joinedAt       DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+}
+
+model Message {
+  id              String   @id @default(cuid()) @map("_id")
+  conversationId  String
+  senderId        String
+  content         String
+  createdAt       DateTime @default(now())
+  read            Boolean  @default(false)
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User        @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
+
+model Presence {
+  id        String   @id @default(cuid()) @map("_id")
+  userId    String   @unique
+  status    String   @default("OFFLINE")
+  lastSeen  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Call {
+  id        String    @id @default(cuid()) @map("_id")
+  callerId  String
+  calleeId  String
+  type      String
+  status    String    @default("PENDING")
+  startedAt DateTime?
+  endedAt   DateTime?
+
+  caller User @relation("CallsSent", fields: [callerId], references: [id], onDelete: Cascade)
+  callee User @relation("CallsReceived", fields: [calleeId], references: [id], onDelete: Cascade)
+}
