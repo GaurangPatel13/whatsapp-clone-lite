@@ -1,14 +1,16 @@
 # Stage 1: Build the Next.js application
-FROM node:18-alpine AS builder
+FROM node:18 AS builder
 
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-COPY prisma ./prisma/
 
-# Install dependencies
+# Install all dependencies (including devDependencies for build)
 RUN npm ci
+
+# Copy prisma schema
+COPY prisma ./prisma/
 
 # Copy source files
 COPY . .
@@ -23,25 +25,19 @@ RUN npm run build
 RUN npx tsc --project tsconfig.ws.json
 
 # Stage 2: Production server
-FROM node:18-alpine AS runner
+FROM node:18 AS runner
 
 WORKDIR /app
 
-# Install production dependencies only
-COPY package*.json ./
-RUN npm ci && npm cache clean --force
-
-# Copy Prisma schema and generated client
-COPY prisma ./prisma/
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-
-# Copy built application
+# Copy everything from builder that we need at runtime
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/src ./src
+COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/server.ts ./
 COPY --from=builder /app/ws-server.ts ./
 
-# Copy public folder if it exists (optional static assets)
+# Create public dir if it doesn't exist
 RUN mkdir -p ./public
 
 # Environment variables
