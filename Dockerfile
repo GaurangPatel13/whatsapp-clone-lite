@@ -33,9 +33,11 @@ COPY prisma ./prisma/
 
 # Copy built application
 COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
 COPY --from=builder /app/src ./src
 COPY --from=builder /app/server.ts ./server.ts
+
+# Copy public folder if it exists (optional static assets)
+RUN mkdir -p ./public
 
 # Environment variables
 ENV NODE_ENV=production
