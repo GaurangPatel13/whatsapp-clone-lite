@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/server/db';
 import { getUserFromToken } from '@/server/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get('Authorization');
@@ -110,6 +112,8 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
