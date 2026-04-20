@@ -38,6 +38,7 @@ COPY prisma ./prisma/
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/server.ts ./
+COPY --from=builder /app/ws-server.ts ./
 
 # Copy public folder if it exists (optional static assets)
 RUN mkdir -p ./public
