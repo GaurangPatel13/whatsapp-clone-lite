@@ -36,7 +36,7 @@ COPY prisma ./prisma/
 
 # Copy built application
 COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/src ./src
 COPY --from=builder /app/server.ts ./
 COPY --from=builder /app/ws-server.ts ./
 
