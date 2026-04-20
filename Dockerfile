@@ -31,8 +31,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci && npm cache clean --force
 
-# Copy Prisma schema and client
+# Copy Prisma schema and generated client
 COPY prisma ./prisma/
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
 # Copy built application
 COPY --from=builder /app/.next ./.next
