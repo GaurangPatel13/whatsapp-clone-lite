@@ -19,6 +19,9 @@ RUN npx prisma generate
 # Build Next.js
 RUN npm run build
 
+# Compile ws-server to JavaScript for production
+RUN npx tsc --project tsconfig.ws.json
+
 # Stage 2: Production server
 FROM node:18-alpine AS runner
 
@@ -26,15 +29,15 @@ WORKDIR /app
 
 # Install production dependencies only
 COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci && npm cache clean --force
 
 # Copy Prisma schema and client
 COPY prisma ./prisma/
 
 # Copy built application
 COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/src ./src
-COPY --from=builder /app/server.ts ./server.ts
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/server.ts ./
 
 # Copy public folder if it exists (optional static assets)
 RUN mkdir -p ./public
